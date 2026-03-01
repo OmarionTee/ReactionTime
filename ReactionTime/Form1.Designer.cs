@@ -45,6 +45,7 @@
             this.Reaction_Button.TabIndex = 0;
             this.Reaction_Button.Text = "Click to begin the test.";
             this.Reaction_Button.UseVisualStyleBackColor = false;
+            this.Reaction_Button.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Reaction_Button_KeyDown);
             this.Reaction_Button.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Reaction_Button_MouseClick);
             // 
             // Form1
