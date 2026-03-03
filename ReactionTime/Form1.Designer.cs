@@ -36,7 +36,7 @@
             this.Reaction_Button.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Reaction_Button.BackColor = System.Drawing.Color.Blue;
             this.Reaction_Button.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.Reaction_Button.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.Reaction_Button.FlatAppearance.BorderSize = 0;
             this.Reaction_Button.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Reaction_Button.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.Reaction_Button.Location = new System.Drawing.Point(0, 0);
@@ -45,7 +45,7 @@
             this.Reaction_Button.TabIndex = 0;
             this.Reaction_Button.Text = "Click to begin the test.";
             this.Reaction_Button.UseVisualStyleBackColor = false;
-            this.Reaction_Button.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Reaction_Button_KeyDown);
+            this.Reaction_Button.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Reaction_Button_KeyPress);
             this.Reaction_Button.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Reaction_Button_MouseClick);
             // 
             // Form1
@@ -55,6 +55,7 @@
             this.Controls.Add(this.Reaction_Button);
             this.Name = "Form1";
             this.Text = "Reaction Time";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
 
         }

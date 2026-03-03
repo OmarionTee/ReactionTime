@@ -63,8 +63,15 @@ namespace ReactionTime
             canClick = true; // Now player is allowed to click
         }
 
-        private void Reaction_Button_KeyDown(object sender, KeyEventArgs e)
+
+        private void Form1_Load(object sender, EventArgs e)
         {
+
+        }
+
+        private void Reaction_Button_KeyPress(object sender, KeyPressEventArgs e)
+        {
+
             // If button is green and player clicked in time
             if (canClick)
             {
@@ -96,6 +103,7 @@ namespace ReactionTime
                     Reaction_Button.Text = "Wait for green...";
                 }
             }
+
         }
     }
 }
