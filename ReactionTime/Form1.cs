@@ -7,12 +7,17 @@ namespace ReactionTime
 {
     public partial class Form1 : Form
     {
-
         Random random = new Random(); // Generates random delay time
-        Stopwatch stopwatch = new Stopwatch(); // Measures reaction speed
-        Timer gameTimer = new Timer(); // Controls when the button turns green
-        bool waitingForClick = false; // True when player has started a round (button is red)
-        bool canClick = false; // True when button is green and valid to click
+        Stopwatch stopwatch = new Stopwatch(); // Measures elapsed time since green
+        Timer gameTimer = new Timer(); // Controls when panels turn green
+
+        bool waitingForGreen = false; // true when waiting (panels are red)
+        bool canShoot = false; // true when panels are green and valid to shoot
+
+        long player1Time = -1;
+        long player2Time = -1;
+        bool player1Shot = false;
+        bool player2Shot = false;
 
         public Form1()
         {
@@ -20,90 +25,148 @@ namespace ReactionTime
             gameTimer.Tick += GameTimer_Tick;
         }
 
-        private void Reaction_Button_MouseClick(object sender, MouseEventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
-            // If button is green and player clicked in time
-            if (canClick)
-            {
-                stopwatch.Stop(); // Stop measuring time         
-                Reaction_Button.Text = $"Your time: {stopwatch.ElapsedMilliseconds} ms\nClick to try again"; // Show reaction time in milliseconds
-                Reaction_Button.BackColor = Color.Blue; // Reset background colour
-                canClick = false; // Not allowed to click until next round
-                waitingForClick = false; // Round is over 
-            } 
-            else
-            {
-                // If player clicks while waiting (button is red)
-                if (waitingForClick)
-                {
-                    gameTimer.Stop(); // Stop timer 
-                    Reaction_Button.Text = "Too early!\nTry again."; // Early click message
-                    Reaction_Button.BackColor = Color.Blue; // Reset background colour
-                    waitingForClick = false; // Reset round 
-                }
-                else
-                {
-                    // Start a new round
+        }
 
-                    Reaction_Button.BackColor = Color.Red; // Show waiting state 
-                    int delay = random.Next(2000, 5000); // Random delay (2–5 seconds) so user can't predict when to click
-                    gameTimer.Interval = delay; // Set timer delay 
-                    gameTimer.Start(); // Start countdown 
-                    waitingForClick = true; // Now waiting for green 
-                    Reaction_Button.Text = "Wait for green..."; 
-                }
-            }
+        private void StartRound()
+        {
+            // Set both panels to waiting state (red)
+            player1Panel.BackColor = Color.Red;
+            player2Panel.BackColor = Color.Red;
+            player1Label.Text = "Wait for green...";
+            player2Label.Text = "Wait for green...";
+            player1Time = -1;
+            player2Time = -1;
+            player1Shot = false;
+            player2Shot = false;
+            canShoot = false;
+            waitingForGreen = true;
+
+            int delay = random.Next(1500, 4000); // 1.5–4s
+            gameTimer.Interval = delay;
+            gameTimer.Start();
         }
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            gameTimer.Stop(); // Stop timer once triggered
-            Reaction_Button.BackColor = Color.Green; // Signal player to click
-            stopwatch.Restart(); // Start measuring reaction time
-            canClick = true; // Now player is allowed to click
+            gameTimer.Stop();
+            // Turn both panels green and allow shooting
+            player1Panel.BackColor = Color.Green;
+            player2Panel.BackColor = Color.Green;
+            player1Label.Text = "SHOOT!";
+            player2Label.Text = "SHOOT!";
+            stopwatch.Restart();
+            canShoot = true;
+            waitingForGreen = false;
         }
 
-
-        private void Form1_Load(object sender, EventArgs e)
+        private void EndRound(string resultMessage)
         {
+            canShoot = false;
+            waitingForGreen = false;
+            stopwatch.Reset();
 
+            // Reset visuals after round; show result on labels
+            player1Label.Text = resultMessage;
+            player2Label.Text = resultMessage;
+
+            // set panels to neutral color so user can start next round by clicking
+            player1Panel.BackColor = Color.Blue;
+            player2Panel.BackColor = Color.DarkRed;
         }
 
-        private void Reaction_Button_KeyPress(object sender, KeyPressEventArgs e)
+        private void HandlePlayerInput(int player)
         {
-
-            // If button is green and player clicked in time
-            if (canClick)
+            // If waiting to start (not in an active round), start a new round
+            if (!waitingForGreen && !canShoot && !player1Shot && !player2Shot)
             {
-                stopwatch.Stop(); // Stop measuring time         
-                Reaction_Button.Text = $"Your time: {stopwatch.ElapsedMilliseconds} ms\nClick to try again"; // Show reaction time in milliseconds
-                Reaction_Button.BackColor = Color.Blue; // Reset background colour
-                canClick = false; // Not allowed to click until next round
-                waitingForClick = false; // Round is over 
+                StartRound();
+                return;
             }
-            else
+
+            // Early shot
+            if (waitingForGreen)
             {
-                // If player clicks while waiting (button is red)
-                if (waitingForClick)
+                gameTimer.Stop();
+                stopwatch.Reset();
+                canShoot = false;
+                waitingForGreen = false;
+
+                int other = (player == 1) ? 2 : 1;
+                string msg = $"Player {player} shot early! Player {other} wins!";
+                EndRound(msg);
+                return;
+            }
+
+            // If panels are green and shooting is allowed
+            if (canShoot)
+            {
+                long time = stopwatch.ElapsedMilliseconds;
+
+                if (player == 1 && !player1Shot)
                 {
-                    gameTimer.Stop(); // Stop timer 
-                    Reaction_Button.Text = "Too early!\nTry again."; // Early click message
-                    Reaction_Button.BackColor = Color.Blue; // Reset background colour
-                    waitingForClick = false; // Reset round 
+                    player1Time = time;
+                    player1Shot = true;
+                    player1Label.Text = $"Time: {player1Time} ms";
+                }
+                else if (player == 2 && !player2Shot)
+                {
+                    player2Time = time;
+                    player2Shot = true;
+                    player2Label.Text = $"Time: {player2Time} ms";
+                }
+
+                // If both shot, decide winner
+                if ((player1Shot && player2Shot) || (player1Shot && !player2Shot && player == 1 && !player2Shot && player2Time == -1 && player1Shot && !canShoot) == false)
+                {
+                    // both shot?
+                }
+
+                if (player1Shot && player2Shot)
+                {
+                    canShoot = false;
+                    string result;
+                    if (player1Time < player2Time)
+                    {
+                        result = $"Player 1 wins! {player1Time} ms vs {player2Time} ms";
+                    }
+                    else if (player2Time < player1Time)
+                    {
+                        result = $"Player 2 wins! {player2Time} ms vs {player1Time} ms";
+                    }
+                    else
+                    {
+                        result = $"Tie! Both {player1Time} ms";
+                    }
+                    EndRound(result);
                 }
                 else
                 {
-                    // Start a new round
-
-                    Reaction_Button.BackColor = Color.Red; // Show waiting state 
-                    int delay = random.Next(2000, 5000); // Random delay (2–5 seconds) so user can't predict when to click
-                    gameTimer.Interval = delay; // Set timer delay 
-                    gameTimer.Start(); // Start countdown 
-                    waitingForClick = true; // Now waiting for green 
-                    Reaction_Button.Text = "Wait for green...";
+                            // If only one player shot so far, keep allowing the other to shoot for a short time.
+                    // Optionally end after both click; here we allow remaining player to still shoot.
                 }
             }
+        }
 
+        private void PlayerPanel_MouseClick(object sender, MouseEventArgs e)
+        {
+            var panel = sender as Panel;
+            if (panel == null) return;
+            int player = (int)panel.Tag;
+            HandlePlayerInput(player);
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.A) // Player 1
+            {
+                HandlePlayerInput(1);
+            }
+            else if (e.KeyCode == Keys.L) // Player 2
+            {
+                HandlePlayerInput(2);
+            }
         }
     }
 }
